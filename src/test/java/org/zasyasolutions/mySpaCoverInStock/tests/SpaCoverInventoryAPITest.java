@@ -2,6 +2,7 @@ package org.zasyasolutions.mySpaCoverInStock.tests;
 
 import io.restassured.RestAssured; 
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -110,13 +111,23 @@ public class SpaCoverInventoryAPITest extends BasePage {
 
 	        	output("Status Code: " + response.getStatusCode());
 	        	output("Response Body: " + response.getBody().asString());
+	        	
 
 	        	// Then assert based on what you see
 	        	Assert.assertEquals(response.getStatusCode(), 201);
 
 	        output(">> Response for entry " + (i + 1) + ": .... ");
-	        response.prettyPrint();
-	        
+//	        response.prettyPrint();
+	        String responseBody = response.getBody().asString();
+	        JsonPath js1 = new JsonPath(responseBody);
+			int count = js1.getInt("inventory.size()"); 
+			output("Total inventory items found: " + count);
+			 Assert.assertTrue(count >= 0, "Inventory items should be returned");
+			 List<String> availableSkus = js1.getList("inventory.sku");
+			 output(">> Getting a get Response for sku : "+availableSkus);
+			for(int j=0;j<count;j++) {
+				
+			}
 	    }
 	}
 
