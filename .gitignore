@@ -27,4 +27,4 @@ Thumbs.db
 # Test output
 test-output/
 surefire-reports/
-cucumber-reports/
+cucumber-reports/s
