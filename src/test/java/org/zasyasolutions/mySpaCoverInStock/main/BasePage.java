@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-
+import org.zasyasolutions.mySpaCoverInStock.auth.AuthManager;
 
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
@@ -27,7 +27,27 @@ public class BasePage {
 	        output("Base URL configured: " +  RestAssured.baseURI);
 	    }
 	    
-	 
+	    @BeforeMethod
+	    public void setup(Method method) {
+	
+     // Normal setup logic goes here
+     System.out.println("Running normal setup for method: " + method.getName());
+
+		 
+	        // Load configuration
+	        RestAssured.baseURI = this.baseUrl;
+	        
+	        output("Base URL configured: " + baseUrl);   
+	            authToken = AuthManager.login();
+	         
+	            output("Token obtained: " + authToken.substring(0, Math.min(20, authToken.length())) + "...");
+
+	            requestSpec = RestAssured.given()
+	                .header("Content-Type", "application/json")
+	                .header("Authorization", "Bearer " + authToken);
+	        
+	        output("Request specification configured");
+	    }
 	 
 	 
 	 public  String baseURI() {

@@ -5,12 +5,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.zasyasolutions.mySpaCoverInStock.main.ConfigReader;
 import org.zasyasolutions.mySpaCoverInStock.model.SpaCoverDimension;
 
-public class FallbackSkuProcessor {
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
-	 public static List<List<String>> generatePayloads(String csvPath) {
+public class PayloadGenerator {
 
+	
+
+	 public static List<List<String>> generatePayloads() {
+		 String csvPath = "src/test/resources/testdata/spa_cover_dimensions.csv"; 
+		 
 	        List<List<String>> payloads = new ArrayList<>();
 
 	        // Step 1: Read CSV
@@ -32,32 +39,25 @@ public class FallbackSkuProcessor {
 	        }
 
 	        return payloads;
-	    }
-    
-//    public static void main(String[] args) {
-//    	String csvPath = "src/test/resources/testdata/spa_cover_dimensions.csv";
-//    	 List<List<String>> payload = generatePayloads(csvPath); 
-//    	}
-    
-    
-    public static void main(String[] args) {
-		String csvPath = "src/test/resources/testdata/spa_cover_dimensions.csv"; 
-		
-		
-		// Print all SKUs
-		 List<List<String>> skuPayloads = generatePayloads(csvPath);
-
-		    // Iterate per CSV entry (one API request per entry)
-		    for (int i = 0; i < skuPayloads.size(); i++) {
-
-		        List<String> skuList = skuPayloads.get(i);
-
-		        // Build payload for THIS entry
-		        Map<String, Object> payload = new HashMap<>();
-		        payload.put("skus", skuList);
-
-		        System.out.println("Payload for entry " + (i + 1) + ": " + payload);
-		    }
+	 }
+  
+	public static Object loginCredentials() {
+		// TODO Auto-generated method stub
+		String loginEmail = ConfigReader.getProperty("login.email");
+    	String loginPassword = ConfigReader.getProperty("login.password");
+    	
+    	  Map<String, Object> credentials = new HashMap<>();
+	        credentials.put("email", loginEmail);
+	        credentials.put("password", loginPassword);
+	      
+	        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	        String jsonOutput = gson.toJson(credentials);
+	        System.out.println("Log In Creds : " + jsonOutput);
+			return jsonOutput;
 	}
+
+	
+    
+
     
 }

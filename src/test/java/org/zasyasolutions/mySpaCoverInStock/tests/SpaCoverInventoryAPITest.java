@@ -1,6 +1,6 @@
 package org.zasyasolutions.mySpaCoverInStock.tests;
 
-import io.restassured.RestAssured;
+import io.restassured.RestAssured; 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.testng.Assert;
@@ -14,6 +14,11 @@ import org.zasyasolutions.mySpaCoverInStock.pages.InventorySearchAPIClient;
 import org.zasyasolutions.mySpaCoverInStock.utils.CsvDimensionReader;
 import org.zasyasolutions.mySpaCoverInStock.utils.DimensionConverter;
 import org.zasyasolutions.mySpaCoverInStock.utils.FallbackDimensionGenerator;
+
+import org.zasyasolutions.mySpaCoverInStock.utils.PayloadGenerator;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import static io.restassured.RestAssured.given;
 
@@ -73,44 +78,38 @@ public class SpaCoverInventoryAPITest extends BasePage {
 		Assert.assertTrue(containsOriginal, "Fallback list should include original dimensions");
 	}
 
-	 @Test
-	    public void inventorySearchWithFallbackSkus() {
+	@Test
+	public void inventorySearchWithFallbackSkus() {
 
-	        // 1️⃣ Read CSV
-	        List<SpaCoverDimension> csvDimensions =
-	                CsvDimensionReader.readDimensions("src/test/resources/dimensions.csv");
+	    List<List<String>> skuPayloads = PayloadGenerator.generatePayloads();
 
-	        // 2️⃣ Apply fallback logic
-	        List<SpaCoverDimension> allFallbackDimensions = new ArrayList<>();
-	        for (SpaCoverDimension dim : csvDimensions) {
-	            allFallbackDimensions.addAll(
-	                FallbackDimensionGenerator.generateFallbacks(dim)
-	            );
-	        }
+	    for (int i = 0; i < skuPayloads.size(); i++) {
 
-	        // 3️⃣ Convert fallback dimensions → SKU array
-	        List<String> skuArray =
-	                FallbackDimensionGenerator.generateSKUArray(allFallbackDimensions);
+	        List<String> skuList = skuPayloads.get(i);
 
-	        // ✅ Now skuArray contains SKUs with first digit conversion applied automatically
-	        System.out.println("Generated SKUs: " + skuArray);
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("skus", skuList);
+	        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	        String payload = gson.toJson(data);
+	        
+	        output("Endpoint: " + inventoryEndpoint);
+	        output(">> Sending payload for entry " + (i + 1) + ": " + payload);
 
-	        // 4️⃣ Send SKU array as payload in API call
-	        Map<String, Object> payload = new HashMap<>();
-	        payload.put("skus", skuArray);
-
-	        Response response = given()
-	                .contentType(ContentType.JSON)
+	        Response response =
+	            requestSpec
 	                .body(payload)
-	                .when()
-	                .post("/inventory/search")
-	                .then()
+	            .when()
+	                .post(inventoryEndpoint)
+	            .then()
 	                .statusCode(200)
 	                .extract()
 	                .response();
 
-	        System.out.println("API Response: " + response.asString());
+	        output(">> Response for entry " + (i + 1) + ": .... ");
+	        response.prettyPrint();
 	    }
+	}
+
 	
 
 //	    @Test(description = "Test dimension converter for all replacement digits")
