@@ -25,6 +25,8 @@ public class BasePage {
 	        this.inventoryEndpoint = ConfigReader.getProperty("inventory.endpoint");
 	        RestAssured.baseURI = baseUrl;
 	        output("Base URL configured: " +  RestAssured.baseURI);
+	        
+	        
 	    }
 	    
 	    @BeforeMethod
@@ -44,7 +46,8 @@ public class BasePage {
 
 	            requestSpec = RestAssured.given()
 	                .header("Content-Type", "application/json")
-	                .header("Authorization", "Bearer " + authToken);
+	                .header("Authorization", "Bearer " + authToken)
+	            .header("X-Webhook-Key","22217870c81aa09243577ec0bc5eb0cd19f4fb4a70e067a0e65993e1ee7769fa");
 	        
 	        output("Request specification configured");
 	    }

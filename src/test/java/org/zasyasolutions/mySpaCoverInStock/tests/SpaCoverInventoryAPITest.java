@@ -88,7 +88,7 @@ public class SpaCoverInventoryAPITest extends BasePage {
 	        List<String> skuList = skuPayloads.get(i);
 
 	        Map<String, Object> data = new HashMap<>();
-	        data.put("skus", skuList);
+	        data.put("sku", skuList);
 	        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 	        String payload = gson.toJson(data);
 	        
@@ -96,17 +96,27 @@ public class SpaCoverInventoryAPITest extends BasePage {
 	        output(">> Sending payload for entry " + (i + 1) + ": " + payload);
 
 	        Response response =
-	            requestSpec
-	                .body(payload)
-	            .when()
-	                .post(inventoryEndpoint)
-	            .then()
-	                .statusCode(200)
-	                .extract()
-	                .response();
+	        	    requestSpec
+	        	        .body(payload)
+	        	        .log().all()
+	        	       
+	        	        .header("Accept","application/json")
+	        	    .when()
+	        	        .post(inventoryEndpoint)
+	        	    .then()
+	        	        .log().all()  
+	        	        .extract()
+	        	        .response();
+
+	        	output("Status Code: " + response.getStatusCode());
+	        	output("Response Body: " + response.getBody().asString());
+
+	        	// Then assert based on what you see
+	        	Assert.assertEquals(response.getStatusCode(), 201);
 
 	        output(">> Response for entry " + (i + 1) + ": .... ");
 	        response.prettyPrint();
+	        
 	    }
 	}
 
