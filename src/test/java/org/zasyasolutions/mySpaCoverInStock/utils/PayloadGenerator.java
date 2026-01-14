@@ -33,7 +33,7 @@ public class PayloadGenerator {
 	            List<String> skuPayload =
 	                    FallbackDimensionGenerator.generateSKUArray(fallbacks);
 
-	            System.out.println("Payload for " + original + ": " + skuPayload);
+	            System.out.println("Payload for " + original +"with fallback skus = "+ skuPayload.size()+ ": " + skuPayload);
 
 	            payloads.add(skuPayload); 
 	        }
@@ -41,6 +41,11 @@ public class PayloadGenerator {
 	        return payloads;
 	 }
   
+	 
+	 public static void main(String[] args) {
+			generatePayloads();
+		}
+	 
 	public static Object loginCredentials() {
 		// TODO Auto-generated method stub
 		String loginEmail = ConfigReader.getProperty("login.email");

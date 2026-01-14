@@ -64,7 +64,7 @@ public class SpaCoverInventoryAPITest extends BasePage {
 
 	// @Test(description = "Test fallback generation for standard dimensions")
 	public void testFallbackGenerationStandard() {
-		SpaCoverDimension dimension = new SpaCoverDimension(91, 82, 6);
+		SpaCoverDimension dimension = new SpaCoverDimension(91, 81, 5);
 
 		List<SpaCoverDimension> fallbacks = FallbackDimensionGenerator.generateFallbacks(dimension);
 
@@ -123,11 +123,11 @@ public class SpaCoverInventoryAPITest extends BasePage {
 			int count = js1.getInt("inventory.size()"); 
 			output("Total inventory items found: " + count);
 			 Assert.assertTrue(count >= 0, "Inventory items should be returned");
-			 List<String> availableSkus = js1.getList("inventory.sku");
-			 output(">> Getting a get Response for sku : "+availableSkus);
-			for(int j=0;j<count;j++) {
-				
-			}
+			 List<String> availableInventorySkus = js1.getList("inventory.sku");
+			 List<String> availableInboundSkus = js1.getList("inbound.sku");
+			 output(">> Getting a get Response for inventory sku : "+availableInventorySkus);
+			 output(">> Getting a get Response for inbound sku : "+availableInboundSkus);
+			 
 	    }
 	}
 
