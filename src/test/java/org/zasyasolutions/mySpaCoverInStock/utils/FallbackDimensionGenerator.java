@@ -25,7 +25,7 @@ public class FallbackDimensionGenerator {
 
     /**
      * Non-product fallback logic using permutations,
-     * excluding forbidden offset combinations.
+     * excluding exact forbidden offset combinations.
      */
     private static List<SpaCoverDimension> generateStandardFallbacksNonProduct(
             int altDimA, int altDimB, int altDimC) {
@@ -37,7 +37,7 @@ public class FallbackDimensionGenerator {
         int[] bOffsets = {-1, 0, 1, 2};
         int[] cOffsets = {-1, 0, 1};
 
-        // Forbidden offset combinations
+        // Forbidden offset combinations (exact matches to exclude)
         int[][] forbidden = {
             {-1,  2, -1},
             {-1,  2,  0},
@@ -47,17 +47,19 @@ public class FallbackDimensionGenerator {
             { 2, -1,  1}
         };
 
-        outer:
         for (int aOff : aOffsets) {
             for (int bOff : bOffsets) {
                 for (int cOff : cOffsets) {
 
-                    // Skip forbidden combinations
+                    // Skip if this exact combination is forbidden
+                    boolean isForbidden = false;
                     for (int[] f : forbidden) {
                         if (aOff == f[0] && bOff == f[1] && cOff == f[2]) {
-                            continue outer; // skip this combination
+                            isForbidden = true;
+                            break;
                         }
                     }
+                    if (isForbidden) continue; // skip only this combination
 
                     int newA = altDimA + aOff;
                     int newB = altDimB + bOff;
