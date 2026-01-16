@@ -41,7 +41,7 @@ public class InventoryResponseOrganizer {
             String referenceSku = payloadSkus.get(0);
             System.out.println("\n=== Processing Reference SKU: " + referenceSku + " ===");
             
-            // Parse dimensions from reference SKU
+            // Parse dimensions from reference SKU (DimC for CSV display only)
             DimensionInfo dimInfo = parseDimensions(referenceSku);
             System.out.println("Reference - DimA: " + dimInfo.dimA + ", DimB: " + dimInfo.dimB + ", DimC: " + dimInfo.dimC);
             
@@ -108,8 +108,8 @@ public class InventoryResponseOrganizer {
     private static Map<String, String> selectBestSkusPerColor(List<JsonObject> items, DimensionInfo refDim) {
         Map<String, String> selectedSkus = new LinkedHashMap<>();
         
-        // Build reference dimension key (e.g., "N0N0-55")
-        String exactDimKey = refDim.dimA + refDim.dimB + "-" + refDim.dimC + refDim.dimC;
+        // Build reference dimension key (e.g., "E4E4") - only DimA and DimB
+        String exactDimKey = refDim.dimA + refDim.dimB;
         
         System.out.println("\n=== Searching for Exact Match: " + exactDimKey + " ===");
         
@@ -121,10 +121,10 @@ public class InventoryResponseOrganizer {
                 
                 if (skuParts.length < 4) continue;
                 
-                String itemDimKey = skuParts[0] + "-" + skuParts[1]; // e.g., "N0N0-55"
+                String itemDimKey = skuParts[0]; // e.g., "E4E4"
                 String itemColor = skuParts[3]; // e.g., "1104"
                 
-                // Check if this is exact match for current color
+                // Check if this is exact match for current color (ignoring DimC)
                 if (itemDimKey.equals(exactDimKey) && itemColor.equals(colorCode)) {
                     String inHandQtyStr = item.get("inHandQuantity").getAsString();
                     int inHandQty = Integer.parseInt(inHandQtyStr);
@@ -235,15 +235,16 @@ public class InventoryResponseOrganizer {
     }
     
     /**
-     * Parse dimensions from payload SKU (e.g., "N0N0-5")
+     * Parse dimensions from payload SKU (e.g., "E4E4-5")
+     * Extracts DimA, DimB, and DimC (DimC only for CSV display, not for matching logic)
      */
     private static DimensionInfo parseDimensions(String sku) {
         String[] parts = sku.split("-");
-        String dims = parts[0]; // N0N0
+        String dims = parts[0]; // E4E4
         String dimC = parts[1]; // 5
         
-        String dimA = dims.substring(0, 2); // N0
-        String dimB = dims.substring(2, 4); // N0
+        String dimA = dims.substring(0, 2); // E4
+        String dimB = dims.substring(2, 4); // E4
         
         return new DimensionInfo(dimA, dimB, dimC);
     }
@@ -271,7 +272,7 @@ public class InventoryResponseOrganizer {
     }
     
     /**
-     * Generate empty CSV with just headers
+     * Generate empty CSV with just headers (DimC included for display)
      */
     private static void generateEmptyCSV(DimensionInfo dimInfo, String outputFilePath) {
         try (FileWriter writer = new FileWriter(outputFilePath, false)) {
@@ -288,6 +289,7 @@ public class InventoryResponseOrganizer {
     
     /**
      * Append row to CSV (or create with headers if first time)
+     * DimC included in CSV for display, but not used in matching logic
      */
     private static void appendToCSV(
         Map<String, String> selectedSkus,
@@ -315,19 +317,21 @@ public class InventoryResponseOrganizer {
             String dimAConverted = replaceLettersWithNumbers(dimInfo.dimA);
             String dimBConverted = replaceLettersWithNumbers(dimInfo.dimB);
             
-            // Write data row with reference dimensions
+            // Write data row with reference dimensions (including DimC for display)
             writer.write(dimAConverted + "," + dimBConverted + "," + dimInfo.dimC);
             
-            // Write SKU for each color code (or empty if not found)
+            // Write SKU for each color code (or "inbound/custom" if not found)
             for (String colorCode : COLOR_CODES) {
                 String sku = selectedSkus.getOrDefault(colorCode, "");
                 
-                // Convert letters in SKU to numbers
-                if (!sku.isEmpty()) {
+                if (sku.isEmpty()) {
+                    // No SKU found for this color
+                    writer.write(",inbound/custom");
+                } else {
+                    // Convert letters in SKU to numbers
                     sku = replaceLettersWithNumbers(sku);
+                    writer.write("," + sku);
                 }
-                
-                writer.write("," + sku);
             }
             
             writer.write("\n");
@@ -343,7 +347,7 @@ public class InventoryResponseOrganizer {
         }
     }
     
-    // Helper class
+    // Helper class - DimC included for CSV display only, not used in matching logic
     static class DimensionInfo {
         String dimA;
         String dimB;
