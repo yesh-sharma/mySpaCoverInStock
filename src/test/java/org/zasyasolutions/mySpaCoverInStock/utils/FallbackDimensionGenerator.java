@@ -10,19 +10,43 @@ public class FallbackDimensionGenerator {
     /**
      * Generate all fallback dimension combinations
      */
-    public static List<SpaCoverDimension> generateFallbacks(SpaCoverDimension original) {
+//    public static List<SpaCoverDimension> generateFallbacks(SpaCoverDimension original) {
+//
+//        List<SpaCoverDimension> fallbackAttempts = new ArrayList<>();
+//
+//        int altDimA = original.getDimensionA();
+//        int altDimB = original.getDimensionB();
+//        int altDimC = original.getDimensionC();
+//
+//        fallbackAttempts.addAll(generateStandardFallbacksNonProduct(altDimA, altDimB, altDimC));
+//
+//        return fallbackAttempts;
+//    }
 
-        List<SpaCoverDimension> fallbackAttempts = new ArrayList<>();
+	
+	
+	public static List<SpaCoverDimension> generateFallbacks(SpaCoverDimension original) {
 
-        int altDimA = original.getDimensionA();
-        int altDimB = original.getDimensionB();
-        int altDimC = original.getDimensionC();
+	    List<SpaCoverDimension> fallbackAttempts = new ArrayList<>();
 
-        fallbackAttempts.addAll(generateStandardFallbacksNonProduct(altDimA, altDimB, altDimC));
+	    int altDimA = original.getDimensionA();
+	    int altDimB = original.getDimensionB();
+	    int altDimC = original.getDimensionC();
 
-        return fallbackAttempts;
-    }
+	    fallbackAttempts.addAll(
+	        generateStandardFallbacksNonProduct(altDimA, altDimB, altDimC)
+	    );
 
+	    // Put original dimension at 0th index
+	    fallbackAttempts.add(0, original);
+
+	    return fallbackAttempts;
+	}
+
+	
+	
+	
+	
     /**
      * Non-product fallback logic using permutations,
      * excluding exact forbidden offset combinations.
