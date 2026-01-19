@@ -1,7 +1,5 @@
 package org.zasyasolutions.mySpaCoverInStock.auth;
 
-
-
 import org.zasyasolutions.mySpaCoverInStock.main.ConfigReader;
 import org.zasyasolutions.mySpaCoverInStock.utils.PayloadGenerator;
 
