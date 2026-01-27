@@ -1,368 +1,3 @@
-//package org.zasyasolutions.mySpaCoverInStock.utils;
-//
-//import com.google.gson.JsonArray;
-//import com.google.gson.JsonElement;
-//import com.google.gson.JsonObject;
-//import com.google.gson.JsonParser;
-//
-//import java.io.File;
-//import java.io.FileWriter;
-//import java.io.IOException;
-//import java.util.*;
-//
-//public class InventoryResponseOrganizer {
-//    
-//    // Color code priority - these will be the column headers
-//    private static final List<String> COLOR_CODES = Arrays.asList(
-//        "1104", "1244", "1239", "3132", "3221", "3218"
-//    );
-//    
-//    // Track if this is the first write to the file
-//    private static boolean isFirstWrite = true;
-//    
-//    /**
-//     * Reset the first write flag (call this at the start of your test)
-//     */
-//    public static void resetFileState() {
-//        isFirstWrite = true;
-//    }
-//    
-//    /**
-//     * Main method to process and organize inventory response
-//     */
-//    public static void processAndSaveInventory(String responseJson, List<String> payloadSkus, String outputFilePath) {
-//        try {
-//            // Take first SKU from payload as reference
-//            if (payloadSkus.isEmpty()) {
-//                System.out.println("No payload SKUs to process");
-//                return;
-//            }
-//            
-//            String referenceSku = payloadSkus.get(0);
-//            System.out.println("\n=== Processing Reference SKU: " + referenceSku + " ===");
-//            
-//            // Parse dimensions from reference SKU (DimC for CSV display only)
-//            DimensionInfo dimInfo = parseDimensions(referenceSku);
-//            System.out.println("Reference - DimA: " + dimInfo.dimA + ", DimB: " + dimInfo.dimB + ", DimC: " + dimInfo.dimC);
-//            
-//            JsonObject response = JsonParser.parseString(responseJson).getAsJsonObject();
-//            
-//            // Collect ALL items from both inventory AND inbound
-//            List<JsonObject> allItems = new ArrayList<>();
-//            
-//            // Add inventory items with inHandQuantity > 0
-//            JsonArray inventoryArray = response.getAsJsonArray("inventory");
-//            for (JsonElement element : inventoryArray) {
-//                JsonObject item = element.getAsJsonObject();
-//                String inHandQtyStr = item.get("inHandQuantity").getAsString();
-//                int inHandQty = Integer.parseInt(inHandQtyStr);
-//                
-//                if (inHandQty > 0) {
-//                    allItems.add(item);
-//                }
-//            }
-//            
-//            // Add inbound items with inHandQuantity > 0
-//            JsonArray inboundArray = response.getAsJsonArray("inbound");
-//            if (inboundArray != null) {
-//                for (JsonElement element : inboundArray) {
-//                    JsonObject item = element.getAsJsonObject();
-//                    String inHandQtyStr = item.get("inHandQuantity").getAsString();
-//                    int inHandQty = Integer.parseInt(inHandQtyStr);
-//                    
-//                    if (inHandQty > 0) {
-//                        allItems.add(item);
-//                    }
-//                }
-//            }
-//            
-//            System.out.println("Total items after filtering (inHandQuantity > 0): " + allItems.size());
-//            
-//            if (allItems.isEmpty()) {
-//                System.out.println("⚠ No items with available quantity found!");
-//                if (isFirstWrite) {
-//                    generateEmptyCSV(dimInfo, outputFilePath);
-//                    isFirstWrite = false;
-//                }
-//                return;
-//            }
-//            
-//            // Select the best SKU for each color variant
-//            Map<String, String> selectedSkus = selectBestSkusPerColor(allItems, dimInfo);
-//            
-//            // Append to CSV (or create if first time)
-//            appendToCSV(selectedSkus, dimInfo, outputFilePath);
-//            
-//            System.out.println("✓ CSV row added to: " + outputFilePath);
-//            
-//        } catch (Exception e) {
-//            System.err.println("Error processing inventory: " + e.getMessage());
-//            e.printStackTrace();
-//        }
-//    }
-//    
-//    /**
-//     * Select the best SKU for each color variant
-//     * Priority: Exact match with inHandQuantity > 0, then fallbacks
-//     */
-//    private static Map<String, String> selectBestSkusPerColor(List<JsonObject> items, DimensionInfo refDim) {
-//        Map<String, String> selectedSkus = new LinkedHashMap<>();
-//        
-//        // Build reference dimension key (e.g., "E4E4") - only DimA and DimB
-//        String exactDimKey = refDim.dimA + refDim.dimB;
-//        
-//        System.out.println("\n=== Searching for Exact Match: " + exactDimKey + " ===");
-//        
-//        // First pass: Look for EXACT matches for each color
-//        for (String colorCode : COLOR_CODES) {
-//            for (JsonObject item : items) {
-//                String fullSku = item.get("sku").getAsString();
-//                String[] skuParts = fullSku.split("-");
-//                
-//                if (skuParts.length < 4) continue;
-//                
-//                String itemDimKey = skuParts[0]; // e.g., "E4E4"
-//                String itemColor = skuParts[3]; // e.g., "1104"
-//                
-//                // Check if this is exact match for current color (ignoring DimC)
-//                if (itemDimKey.equals(exactDimKey) && itemColor.equals(colorCode)) {
-//                    String inHandQtyStr = item.get("inHandQuantity").getAsString();
-//                    int inHandQty = Integer.parseInt(inHandQtyStr);
-//                    
-//                    if (inHandQty > 0) {
-//                        selectedSkus.put(colorCode, fullSku);
-//                        System.out.println("  ✓ EXACT MATCH found for " + colorCode + ": " + fullSku + " (qty: " + inHandQty + ")");
-//                        break; // Found exact match for this color, move to next color
-//                    }
-//                }
-//            }
-//        }
-//        
-//        System.out.println("\n=== Searching for Fallback Matches (if needed) ===");
-//        
-//        // Second pass: Look for fallbacks ONLY for colors not found in exact matches
-//        for (String colorCode : COLOR_CODES) {
-//            if (selectedSkus.containsKey(colorCode)) {
-//                continue; // Already found exact match, skip fallback search
-//            }
-//            
-//            System.out.println("  → No exact match for " + colorCode + ", searching fallbacks...");
-//            
-//            // Find ALL items with this color code
-//            List<JsonObject> colorMatches = new ArrayList<>();
-//            for (JsonObject item : items) {
-//                String fullSku = item.get("sku").getAsString();
-//                String[] skuParts = fullSku.split("-");
-//                
-//                if (skuParts.length >= 4 && skuParts[3].equals(colorCode)) {
-//                    String inHandQtyStr = item.get("inHandQuantity").getAsString();
-//                    int inHandQty = Integer.parseInt(inHandQtyStr);
-//                    
-//                    if (inHandQty > 0) {
-//                        colorMatches.add(item);
-//                    }
-//                }
-//            }
-//            
-//            if (colorMatches.isEmpty()) {
-//                System.out.println("  ✗ No available SKU found for " + colorCode);
-//                continue;
-//            }
-//            
-//            // Sort matches by proximity to reference dimensions
-//            List<JsonObject> sortedFallbacks = sortFallbacksByProximity(colorMatches, refDim);
-//            
-//            // Pick the first (best) fallback
-//            JsonObject bestFallback = sortedFallbacks.get(0);
-//            String bestSku = bestFallback.get("sku").getAsString();
-//            String inHandQtyStr = bestFallback.get("inHandQuantity").getAsString();
-//            
-//            selectedSkus.put(colorCode, bestSku);
-//            System.out.println("  ✓ FALLBACK found for " + colorCode + ": " + bestSku + " (qty: " + inHandQtyStr + ")");
-//        }
-//        
-//        return selectedSkus;
-//    }
-//    
-//    /**
-//     * Sort fallback items by proximity to reference dimensions
-//     * Priority: Larger dimensions first, then closer to reference
-//     */
-//    private static List<JsonObject> sortFallbacksByProximity(List<JsonObject> items, DimensionInfo refDim) {
-//        int refDimA = dimensionToNumeric(refDim.dimA);
-//        int refDimB = dimensionToNumeric(refDim.dimB);
-//        int refAvg = (refDimA + refDimB) / 2;
-//        
-//        List<JsonObject> sorted = new ArrayList<>(items);
-//        
-//        sorted.sort((item1, item2) -> {
-//            String sku1 = item1.get("sku").getAsString();
-//            String sku2 = item2.get("sku").getAsString();
-//            
-//            String[] parts1 = sku1.split("-");
-//            String[] parts2 = sku2.split("-");
-//            
-//            if (parts1.length < 2 || parts2.length < 2) return 0;
-//            
-//            String dims1 = parts1[0];
-//            String dims2 = parts2[0];
-//            
-//            String dimA1 = dims1.substring(0, 2);
-//            String dimB1 = dims1.substring(2, 4);
-//            String dimA2 = dims2.substring(0, 2);
-//            String dimB2 = dims2.substring(2, 4);
-//            
-//            int numA1 = dimensionToNumeric(dimA1);
-//            int numB1 = dimensionToNumeric(dimB1);
-//            int numA2 = dimensionToNumeric(dimA2);
-//            int numB2 = dimensionToNumeric(dimB2);
-//            
-//            int avgDim1 = (numA1 + numB1) / 2;
-//            int avgDim2 = (numA2 + numB2) / 2;
-//            
-//            // Prefer larger dimensions over smaller ones
-//            boolean isLarger1 = avgDim1 > refAvg;
-//            boolean isLarger2 = avgDim2 > refAvg;
-//            
-//            if (isLarger1 && !isLarger2) return -1;
-//            if (!isLarger1 && isLarger2) return 1;
-//            
-//            // Within same category (both larger or both smaller), prefer closer to reference
-//            return Integer.compare(Math.abs(avgDim1 - refAvg), Math.abs(avgDim2 - refAvg));
-//        });
-//        
-//        return sorted;
-//    }
-//    
-//    /**
-//     * Parse dimensions from payload SKU (e.g., "E4E4-5")
-//     * Extracts DimA, DimB, and DimC (DimC only for CSV display, not for matching logic)
-//     */
-//    private static DimensionInfo parseDimensions(String sku) {
-//        String[] parts = sku.split("-");
-//        String dims = parts[0]; // E4E4
-//        String dimC = parts[1]; // 5
-//        
-//        String dimA = dims.substring(0, 2); // E4
-//        String dimB = dims.substring(2, 4); // E4
-//        
-//        return new DimensionInfo(dimA, dimB, dimC);
-//    }
-//    
-//    /**
-//     * Replace letters with numbers (X=6, S=7, E=8, N=9)
-//     */
-//    private static String replaceLettersWithNumbers(String value) {
-//        return value.replace("X", "6")
-//                   .replace("S", "7")
-//                   .replace("E", "8")
-//                   .replace("N", "9");
-//    }
-//    
-//    /**
-//     * Convert dimension code to numeric value for comparison
-//     */
-//    private static int dimensionToNumeric(String dim) {
-//        String replaced = replaceLettersWithNumbers(dim);
-//        try {
-//            return Integer.parseInt(replaced);
-//        } catch (NumberFormatException e) {
-//            return 0;
-//        }
-//    }
-//    
-//    /**
-//     * Generate empty CSV with just headers (DimC included for display)
-//     */
-//    private static void generateEmptyCSV(DimensionInfo dimInfo, String outputFilePath) {
-//        try (FileWriter writer = new FileWriter(outputFilePath, false)) {
-//            writer.write("DimA,DimB,DimC");
-//            for (String colorCode : COLOR_CODES) {
-//                writer.write("," + colorCode);
-//            }
-//            writer.write("\n");
-//            System.out.println("Empty CSV file created with headers only");
-//        } catch (IOException e) {
-//            System.err.println("Error writing CSV file: " + e.getMessage());
-//        }
-//    }
-//    
-//    /**
-//     * Append row to CSV (or create with headers if first time)
-//     * DimC included in CSV for display, but not used in matching logic
-//     */
-//    private static void appendToCSV(
-//        Map<String, String> selectedSkus,
-//        DimensionInfo dimInfo,
-//        String outputFilePath
-//    ) {
-//        try {
-//            File file = new File(outputFilePath);
-//            boolean fileExists = file.exists() && !isFirstWrite;
-//            
-//            // Open file in append mode (if not first write)
-//            FileWriter writer = new FileWriter(outputFilePath, fileExists);
-//            
-//            // Write header only if this is the first write
-//            if (!fileExists || isFirstWrite) {
-//                writer.write("DimA,DimB,DimC");
-//                for (String colorCode : COLOR_CODES) {
-//                    writer.write("," + colorCode);
-//                }
-//                writer.write("\n");
-//                isFirstWrite = false;
-//            }
-//            
-//            // Convert reference dimensions to numeric
-//            String dimAConverted = replaceLettersWithNumbers(dimInfo.dimA);
-//            String dimBConverted = replaceLettersWithNumbers(dimInfo.dimB);
-//            
-//            // Write data row with reference dimensions (including DimC for display)
-//            writer.write(dimAConverted + "," + dimBConverted + "," + dimInfo.dimC);
-//            
-//            // Write SKU for each color code (or "inbound/custom" if not found)
-//            for (String colorCode : COLOR_CODES) {
-//                String sku = selectedSkus.getOrDefault(colorCode, "");
-//                
-//                if (sku.isEmpty()) {
-//                    // No SKU found for this color
-//                    writer.write(",inbound/custom");
-//                } else {
-//                    // Convert letters in SKU to numbers
-//                    sku = replaceLettersWithNumbers(sku);
-//                    writer.write("," + sku);
-//                }
-//            }
-//            
-//            writer.write("\n");
-//            writer.close();
-//            
-//            System.out.println("\n=== CSV Row Added ===");
-//            System.out.println("Reference Dimensions: " + dimAConverted + " x " + dimBConverted + " x " + dimInfo.dimC);
-//            System.out.println("Color variants found: " + selectedSkus.size() + "/" + COLOR_CODES.size());
-//            
-//        } catch (IOException e) {
-//            System.err.println("Error writing CSV file: " + e.getMessage());
-//            e.printStackTrace();
-//        }
-//    }
-//    
-//    // Helper class - DimC included for CSV display only, not used in matching logic
-//    static class DimensionInfo {
-//        String dimA;
-//        String dimB;
-//        String dimC;
-//        
-//        DimensionInfo(String dimA, String dimB, String dimC) {
-//            this.dimA = dimA;
-//            this.dimB = dimB;
-//            this.dimC = dimC;
-//        }
-//    }
-//}
-
-
-
 package org.zasyasolutions.mySpaCoverInStock.utils;
 
 import com.google.gson.JsonArray;
@@ -415,7 +50,7 @@ public class InventoryResponseOrganizer {
             String referenceSku = payloadSkus.get(0);
             System.out.println("\n=== Processing Reference SKU: " + referenceSku + " ===");
             
-            // Parse dimensions from reference SKU (DimC for CSV display only)
+            // Parse dimensions from reference SKU
             DimensionInfo dimInfo = parseDimensions(referenceSku);
             System.out.println("Reference - DimA: " + dimInfo.dimA + ", DimB: " + dimInfo.dimB + ", DimC: " + dimInfo.dimC);
             
@@ -482,8 +117,15 @@ public class InventoryResponseOrganizer {
     private static Map<String, String> selectBestSkusPerColor(List<JsonObject> items, DimensionInfo refDim) {
         Map<String, String> selectedSkus = new LinkedHashMap<>();
         
-        // Build reference dimension key (e.g., "E4E4") - only DimA and DimB
-        String exactDimKey = refDim.dimA + refDim.dimB;
+        // Build reference dimension key
+        // For static 360: refDim.dimA="E8", refDim.dimB="360" → exactDimKey="E8"
+        // For standard: refDim.dimA="E4", refDim.dimB="E4" → exactDimKey="E4E4"
+        String exactDimKey;
+        if (refDim.dimB.equals("360")) {
+            exactDimKey = refDim.dimA; // Just "E8" for static 360
+        } else {
+            exactDimKey = refDim.dimA + refDim.dimB; // "E4E4" for standard
+        }
         
         System.out.println("\n=== Searching for Exact Match: " + exactDimKey + " ===");
         
@@ -493,12 +135,12 @@ public class InventoryResponseOrganizer {
                 String fullSku = item.get("sku").getAsString();
                 String[] skuParts = fullSku.split("-");
                 
-                if (skuParts.length < 4) continue;
+                if (skuParts.length < 2) continue;
                 
-                String itemDimKey = skuParts[0]; // e.g., "E4E4"
-                String itemColor = skuParts[3]; // e.g., "1104"
+                String itemDimKey = skuParts[0]; // e.g., "E4E4" or "E8"
+                String itemColor = extractColorCode(fullSku); // Extract color from SKU
                 
-                // Check if this is exact match for current color (ignoring DimC)
+                // Check if this is exact match for current color
                 if (itemDimKey.equals(exactDimKey) && itemColor.equals(colorCode)) {
                     String inHandQtyStr = item.get("inHandQuantity").getAsString();
                     int inHandQty = Integer.parseInt(inHandQtyStr);
@@ -506,7 +148,7 @@ public class InventoryResponseOrganizer {
                     if (inHandQty > 0) {
                         selectedSkus.put(colorCode, fullSku);
                         System.out.println("  ✓ EXACT MATCH found for " + colorCode + ": " + fullSku + " (qty: " + inHandQty + ")");
-                        break; // Found exact match for this color, move to next color
+                        break;
                     }
                 }
             }
@@ -517,7 +159,7 @@ public class InventoryResponseOrganizer {
         // Second pass: Look for fallbacks ONLY for colors not found in exact matches
         for (String colorCode : COLOR_CODES) {
             if (selectedSkus.containsKey(colorCode)) {
-                continue; // Already found exact match, skip fallback search
+                continue;
             }
             
             System.out.println("  → No exact match for " + colorCode + ", searching fallbacks...");
@@ -526,9 +168,9 @@ public class InventoryResponseOrganizer {
             List<JsonObject> colorMatches = new ArrayList<>();
             for (JsonObject item : items) {
                 String fullSku = item.get("sku").getAsString();
-                String[] skuParts = fullSku.split("-");
+                String itemColor = extractColorCode(fullSku);
                 
-                if (skuParts.length >= 4 && skuParts[3].equals(colorCode)) {
+                if (itemColor.equals(colorCode)) {
                     String inHandQtyStr = item.get("inHandQuantity").getAsString();
                     int inHandQty = Integer.parseInt(inHandQtyStr);
                     
@@ -559,8 +201,21 @@ public class InventoryResponseOrganizer {
     }
     
     /**
+     * Extract color code from SKU
+     * Handles both formats:
+     * - Standard: "E4E4-55-M1-1104" → "1104"
+     * - Static 360: "88360-360-M1-1104" → "1104"
+     */
+    private static String extractColorCode(String sku) {
+        String[] parts = sku.split("-");
+        if (parts.length >= 4) {
+            return parts[3]; // Color code is always the 4th part
+        }
+        return "";
+    }
+    
+    /**
      * Sort fallback items by proximity to reference dimensions
-     * Priority: Larger dimensions first, then closer to reference
      */
     private static List<JsonObject> sortFallbacksByProximity(List<JsonObject> items, DimensionInfo refDim) {
         int refDimA = dimensionToNumeric(refDim.dimA);
@@ -576,23 +231,17 @@ public class InventoryResponseOrganizer {
             String[] parts1 = sku1.split("-");
             String[] parts2 = sku2.split("-");
             
-            if (parts1.length < 2 || parts2.length < 2) return 0;
+            if (parts1.length < 1 || parts2.length < 1) return 0;
             
             String dims1 = parts1[0];
             String dims2 = parts2[0];
             
-            String dimA1 = dims1.substring(0, 2);
-            String dimB1 = dims1.substring(2, 4);
-            String dimA2 = dims2.substring(0, 2);
-            String dimB2 = dims2.substring(2, 4);
+            // Parse dimensions based on format
+            DimensionPair dim1 = parseDimensionPair(dims1);
+            DimensionPair dim2 = parseDimensionPair(dims2);
             
-            int numA1 = dimensionToNumeric(dimA1);
-            int numB1 = dimensionToNumeric(dimB1);
-            int numA2 = dimensionToNumeric(dimA2);
-            int numB2 = dimensionToNumeric(dimB2);
-            
-            int avgDim1 = (numA1 + numB1) / 2;
-            int avgDim2 = (numA2 + numB2) / 2;
+            int avgDim1 = (dim1.dimA + dim1.dimB) / 2;
+            int avgDim2 = (dim2.dimA + dim2.dimB) / 2;
             
             // Prefer larger dimensions over smaller ones
             boolean isLarger1 = avgDim1 > refAvg;
@@ -601,7 +250,7 @@ public class InventoryResponseOrganizer {
             if (isLarger1 && !isLarger2) return -1;
             if (!isLarger1 && isLarger2) return 1;
             
-            // Within same category (both larger or both smaller), prefer closer to reference
+            // Within same category, prefer closer to reference
             return Integer.compare(Math.abs(avgDim1 - refAvg), Math.abs(avgDim2 - refAvg));
         });
         
@@ -609,18 +258,61 @@ public class InventoryResponseOrganizer {
     }
     
     /**
-     * Parse dimensions from payload SKU (e.g., "E4E4-5")
-     * Extracts DimA, DimB, and DimC (DimC only for CSV display, not for matching logic)
+     * Parse dimension pair from SKU prefix
+     * Handles:
+     * - Standard: "E4E4" → DimA=84, DimB=84
+     * - Static 360 from inventory: "E8" (when second part is 360)
+     */
+    private static DimensionPair parseDimensionPair(String dims) {
+        // For static 360 case, dims will be just "E8" (2 chars)
+        // We handle this in the calling code by checking full SKU
+        
+        // Standard format: "E4E4" → DimA=E4, DimB=E4
+        if (dims.length() >= 4) {
+            String dimA = dims.substring(0, 2);
+            String dimB = dims.substring(2, 4);
+            return new DimensionPair(dimensionToNumeric(dimA), dimensionToNumeric(dimB));
+        }
+        
+        // For 2-char dims (static 360 case), return with 360 as dimB
+        if (dims.length() == 2) {
+            return new DimensionPair(dimensionToNumeric(dims), 360);
+        }
+        
+        return new DimensionPair(0, 0);
+    }
+    
+    /**
+     * Parse dimensions from payload SKU
+     * Handles two formats:
+     * 1. Standard: "E4E4-5" → DimA=E4, DimB=E4, DimC=5
+     * 2. Static 360: "E8-360" → DimA=E8, DimB=360, DimC="" (empty for display)
      */
     private static DimensionInfo parseDimensions(String sku) {
         String[] parts = sku.split("-");
-        String dims = parts[0]; // E4E4
-        String dimC = parts[1]; // 5
+        String firstPart = parts[0];
         
-        String dimA = dims.substring(0, 2); // E4
-        String dimB = dims.substring(2, 4); // E4
+        // Check if this is static 360 format
+        // First part will be 2 chars (E8) for static 360
+        // First part will be 4 chars (E4E4) for standard
+        if (firstPart.length() == 2) {
+            // Format: "E8-360" → DimA=E8, DimB=360, DimC="" (empty)
+            String dimA = firstPart; // E8
+            String dimB = "360";
+            String dimC = ""; // Empty for static 360 case
+            return new DimensionInfo(dimA, dimB, dimC);
+        }
         
-        return new DimensionInfo(dimA, dimB, dimC);
+        // Standard format: "E4E4-5"
+        if (firstPart.length() >= 4) {
+            String dimA = firstPart.substring(0, 2); // E4
+            String dimB = firstPart.substring(2, 4); // E4
+            String dimC = parts.length > 1 ? parts[1] : "0";
+            return new DimensionInfo(dimA, dimB, dimC);
+        }
+        
+        // Fallback
+        return new DimensionInfo("", "", "0");
     }
     
     /**
@@ -637,6 +329,12 @@ public class InventoryResponseOrganizer {
      * Convert dimension code to numeric value for comparison
      */
     private static int dimensionToNumeric(String dim) {
+        // If already numeric, return as-is
+        if (dim.matches("\\d+")) {
+            return Integer.parseInt(dim);
+        }
+        
+        // Replace letters and parse
         String replaced = replaceLettersWithNumbers(dim);
         try {
             return Integer.parseInt(replaced);
@@ -646,7 +344,7 @@ public class InventoryResponseOrganizer {
     }
     
     /**
-     * Generate empty CSV with just headers (DimC included for display)
+     * Generate empty CSV with just headers
      */
     private static void generateEmptyCSV(DimensionInfo dimInfo, String outputFilePath) {
         try (FileWriter writer = new FileWriter(outputFilePath, false)) {
@@ -664,7 +362,6 @@ public class InventoryResponseOrganizer {
     
     /**
      * Append row to CSV (or create with headers if first time)
-     * DimC included in CSV for display, but not used in matching logic
      */
     private static void appendToCSV(
         Map<String, String> selectedSkus,
@@ -675,7 +372,6 @@ public class InventoryResponseOrganizer {
             File file = new File(outputFilePath);
             boolean fileExists = file.exists() && !isFirstWrite;
             
-            // Open file in append mode (if not first write)
             FileWriter writer = new FileWriter(outputFilePath, fileExists);
             
             // Write header only if this is the first write
@@ -692,16 +388,16 @@ public class InventoryResponseOrganizer {
             // Convert reference dimensions to numeric
             String dimAConverted = replaceLettersWithNumbers(dimInfo.dimA);
             String dimBConverted = replaceLettersWithNumbers(dimInfo.dimB);
+            String dimCConverted = replaceLettersWithNumbers(dimInfo.dimC);
             
-            // Write data row with reference dimensions (including DimC for display)
-            writer.write(dimAConverted + "," + dimBConverted + "," + dimInfo.dimC);
+            // Write data row with reference dimensions
+            writer.write(dimAConverted + "," + dimBConverted + "," + dimCConverted);
             
-            // Write SKU for each color code (or "inbound/custom" if not found)
+            // Write SKU for each color code
             for (String colorCode : COLOR_CODES) {
                 String sku = selectedSkus.getOrDefault(colorCode, "");
                 
                 if (sku.isEmpty()) {
-                    // No SKU found for this color
                     writer.write(",inbound/custom");
                 } else {
                     // Convert letters in SKU to numbers
@@ -714,7 +410,7 @@ public class InventoryResponseOrganizer {
             writer.close();
             
             System.out.println("\n=== CSV Row Added ===");
-            System.out.println("Reference Dimensions: " + dimAConverted + " x " + dimBConverted + " x " + dimInfo.dimC);
+            System.out.println("Reference Dimensions: " + dimAConverted + " x " + dimBConverted + " x " + dimCConverted);
             System.out.println("Color variants found: " + selectedSkus.size() + "/" + COLOR_CODES.size());
             
         } catch (IOException e) {
@@ -723,7 +419,7 @@ public class InventoryResponseOrganizer {
         }
     }
     
-    // Helper class - DimC included for CSV display only, not used in matching logic
+    // Helper classes
     static class DimensionInfo {
         String dimA;
         String dimB;
@@ -735,11 +431,14 @@ public class InventoryResponseOrganizer {
             this.dimC = dimC;
         }
     }
+    
+    static class DimensionPair {
+        int dimA;
+        int dimB;
+        
+        DimensionPair(int dimA, int dimB) {
+            this.dimA = dimA;
+            this.dimB = dimB;
+        }
+    }
 }
-
-
-
-
-
-
-
