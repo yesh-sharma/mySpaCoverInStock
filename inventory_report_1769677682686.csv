@@ -1,0 +1,51 @@
+DimA,DimB,DimC,1104 - Oxford Grey,1244 - Brazilian Mahogany,1239 - Coffee Brown,3132 - Coastal Grey,3221 - Mahogany,3218 - Mayan Brown
+84,84,7,inbound 8484-75-M1-1104,inbound 8484-75-M1-1244,inbound 8484-75-M1-1239,inbound 8484-75-M1-3132,instock 8484-75-M1-3221,inbound 8484-75-M1-3218
+80,82,7,instock 8282-85-M1-1104,instock 8282-85-M1-1244,custom,instock 8282-75-M1-3132,custom,instock 8282-85-M1-3218
+84,84,9,custom,instock 8484-105-M1-1244,custom,custom,instock 8484-105-M1-3221,custom
+92,92,8,instock 9292-85-M1-1104,instock 9292-85-M1-1244,instock 9292-85-M1-1239,instock 9292-85-M1-3132,instock 9494-87-M1-3221,instock 9292-85-M1-3218
+78,78,5,instock 8080-55-M1-1104,instock 7878-55-M1-1244,instock 7878-55-M1-1239,custom,instock 7878-55-M1-3221,custom
+88,88,5,instock 8888-55-M1-1104,instock 8888-55-M1-1244,inbound 8888-55-M1-1239,instock 8888-55-M1-3132,instock 8888-55-M1-3221,instock 8888-55-M1-3218
+90,90,8,instock 9090-85-M1-1104,instock 9090-85-M1-1244,instock 9090-85-M1-1239,instock 9090-85-M1-3132,instock 9090-85-M1-3221,instock 9090-85-M1-3218
+84,84,11,instock 8484-115-M1-1104,instock 8484-117-M1-1244,instock 8484-115-M1-1239,instock 8686-115-M1-3132,instock 8484-115-M1-3221,instock 8484-117-M1-3218
+92,92,11,instock 9292-115-M1-1104,instock 9292-115-M1-1244,instock 9292-115-M1-1239,instock 9292-115-M1-3132,instock 9292-115-M1-3221,custom
+92,92,5,instock 9292-55-M1-1104,custom,instock 9292-55-M1-1239,instock 9292-55-M1-3132,instock 9292-55-M1-3221,custom
+90,90,5,instock 9090-55-M1-1104,custom,instock 9292-55-M1-1239,instock 9090-55-M1-3132,instock 9292-55-M1-3221,instock 9090-55-M1-3218
+87,87,8,instock 8787-85-M1-1104,instock 8888-85-M1-1244,instock 8787-85-M1-1239,instock 8787-85-M1-3132,instock 8888-87-M1-3221,instock 8787-85-M1-3218
+80,80,8,instock 8080-85-M1-1104,instock 8282-85-M1-1244,instock 8080-85-M1-1239,instock 8080-85-M1-3132,custom,instock 8080-85-M1-3218
+94,94,8,instock 9494-87-M1-1104,instock 9494-87-M1-1244,instock 9494-87-M1-1239,instock 9494-87-M1-3132,instock 9494-87-M1-3221,instock 9494-87-M1-3218
+84,84,3,instock 8484-25-M1-1104,instock 8484-45-M1-1244,instock 8484-25-M1-1239,instock 8484-35-M1-3132,instock 8484-45-M1-3221,instock 8484-45-M1-3218
+84,91,12,instock 8491-127-M1-1104,instock 8491-127-M1-1244,instock 8491-127-M1-1239,instock 8491-127-M1-3132,instock 8491-127-M1-3221,instock 8491-127-M1-3218
+84,84,7,inbound 8484-75-M1-1104,inbound 8484-75-M1-1244,inbound 8484-75-M1-1239,inbound 8484-75-M1-3132,instock 8484-75-M1-3221,inbound 8484-75-M1-3218
+88,88,8,instock 8888-85-M1-1104,instock 8888-85-M1-1244,instock 8888-85-M1-1239,instock 8888-87-M1-3132,instock 8888-87-M1-3221,instock 8888-85-M1-3218
+86,86,5,instock 8686-55-M1-1104,instock 8686-55-M1-1244,instock 8686-55-M1-1239,instock 8686-55-M1-3132,instock 8686-55-M1-3221,instock 8686-55-M1-3218
+66,76,12,instock 6678-115-M1-1104,custom,instock 6676-127-M1-1239,instock 6678-115-M1-3132,custom,instock 6676-127-M1-3218
+86,81,8,instock 8681-85-M1-1104,custom,instock 8882-85-M1-1239,instock 8882-85-M1-3132,custom,instock 8681-85-M1-3218
+84,84,4,instock 8484-55-M1-1104,instock 8484-45-M1-1244,instock 8484-45-M1-1239,instock 8484-35-M1-3132,instock 8484-55-M1-3221,instock 8484-45-M1-3218
+84,84,0,instock 8484-05-M1-1104,custom,custom,instock 8484-05-M1-3132,custom,instock 8484-05-M1-3218
+93,80,11,instock 9380-115-M1-1104,instock 9380-115-M1-1244,instock 9380-115-M1-1239,instock 9380-115-M1-3132,instock 9380-115-M1-3221,instock 9380-115-M1-3218
+74,74,5,instock 7474-55-M1-1104,instock 7474-55-M1-1244,instock 7474-55-M1-1239,custom,custom,custom
+82,82,8,instock 8282-85-M1-1104,instock 8282-85-M1-1244,inbound 8484-75-M1-1239,instock 8282-75-M1-3132,instock 8484-75-M1-3221,instock 8282-85-M1-3218
+84,84,2,instock 8484-25-M1-1104,instock 8484-35-M1-1244,instock 8484-25-M1-1239,instock 8484-35-M1-3132,custom,custom
+82,82,5,instock 8282-55-M1-1104,instock 8282-55-M1-1244,instock 8282-55-M1-1239,instock 8282-45-M1-3132,instock 8484-55-M1-3221,instock 8482-55-M1-3218
+88,74,11,custom,custom,custom,instock 8874-115-M1-3132,custom,instock 8874-115-M1-3218
+80,80,5,instock 8080-55-M1-1104,instock 8080-55-M1-1244,instock 8080-55-M1-1239,instock 8282-45-M1-3132,custom,custom
+78,78,8,instock 7878-85-M1-1104,instock 7878-85-M1-1244,instock 7878-85-M1-1239,instock 8080-85-M1-3132,instock 7878-85-M1-3221,instock 8080-85-M1-3218
+80,80,2,instock 8282-25-M1-1104,custom,instock 8080-25-M1-1239,instock 8080-25-M1-3132,custom,instock 8080-25-M1-3218
+80,80,0,instock 8080-05-M1-1104,custom,instock 8080-05-M1-1239,instock 8080-05-M1-3132,custom,custom
+78,78,2,instock 7878-35-M1-1104,custom,instock 7878-35-M1-1239,instock 8080-25-M1-3132,custom,instock 8080-25-M1-3218
+80,80,7,instock 8080-85-M1-1104,instock 8282-85-M1-1244,instock 8080-85-M1-1239,instock 8080-85-M1-3132,custom,instock 8080-85-M1-3218
+78,78,0,instock 7878-05-M1-1104,custom,instock 7878-05-M1-1239,instock 7878-05-M1-3132,custom,custom
+80,80,9,instock 8080-85-M1-1104,instock 8282-85-M1-1244,instock 8080-85-M1-1239,instock 8080-85-M1-3132,custom,instock 8080-85-M1-3218
+78,78,9,instock 7878-85-M1-1104,instock 7878-85-M1-1244,instock 7878-85-M1-1239,instock 8080-85-M1-3132,instock 7878-85-M1-3221,instock 8080-85-M1-3218
+80,80,4,instock 8080-55-M1-1104,instock 8080-55-M1-1244,instock 8080-55-M1-1239,instock 8282-45-M1-3132,custom,custom
+78,78,4,instock 7878-35-M1-1104,instock 7878-55-M1-1244,instock 7878-35-M1-1239,custom,instock 7878-55-M1-3221,custom
+80,80,6,instock 8080-55-M1-1104,instock 8080-55-M1-1244,instock 8080-55-M1-1239,instock 8282-75-M1-3132,custom,custom
+78,78,6,instock 8080-55-M1-1104,instock 7878-55-M1-1244,instock 7878-55-M1-1239,custom,instock 7878-55-M1-3221,custom
+80,80,3,instock 8282-25-M1-1104,custom,instock 8080-25-M1-1239,instock 8080-25-M1-3132,custom,instock 8080-25-M1-3218
+78,78,3,instock 7878-35-M1-1104,custom,instock 7878-35-M1-1239,instock 8080-25-M1-3132,custom,instock 8080-25-M1-3218
+80,80,1,instock 8080-05-M1-1104,custom,instock 8080-05-M1-1239,instock 8080-05-M1-3132,custom,instock 8080-25-M1-3218
+78,78,1,instock 7878-05-M1-1104,custom,instock 7878-05-M1-1239,instock 7878-05-M1-3132,custom,instock 8080-25-M1-3218
+84,84,6,instock 8484-55-M1-1104,instock 8484-55-M1-1244,instock 8484-55-M1-1239,instock 8484-55-M1-3132,instock 8484-55-M1-3221,instock 8484-55-M1-3218
+84,84,10,instock 8484-115-M1-1104,instock 8484-117-M1-1244,instock 8484-115-M1-1239,instock 8686-115-M1-3132,instock 8484-115-M1-3221,instock 8484-117-M1-3218
+92,92,6,instock 9292-55-M1-1104,custom,instock 9292-55-M1-1239,instock 9292-55-M1-3132,instock 9292-55-M1-3221,custom
+88,88,6,instock 8888-55-M1-1104,instock 8888-55-M1-1244,inbound 8888-55-M1-1239,instock 8888-55-M1-3132,instock 8888-55-M1-3221,instock 8888-55-M1-3218
