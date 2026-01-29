@@ -1,10 +1,6 @@
 package org.zasyasolutions.mySpaCoverInStock.utils;
-
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -41,6 +37,7 @@ public class InventoryExcelGenerator {
             Workbook workbook;
             Sheet sheet;
             int lastRowNum = 0;
+            int dataStartRow = 31; // Row where data table begins (after info section)
             File file = new File(outputFilePath);
             
             // Load existing workbook or create new one
@@ -54,7 +51,7 @@ public class InventoryExcelGenerator {
                 workbook = new XSSFWorkbook();
                 sheet = workbook.createSheet("Inventory");
                 createHeaderRow(workbook, sheet);
-                lastRowNum = 0;
+                lastRowNum = dataStartRow; // Start from data table header row
             }
             
             // Create new data row
@@ -100,13 +97,6 @@ public class InventoryExcelGenerator {
                 }
             }
             
-            // Auto-size columns (only on first write)
-            if (lastRowNum == 0) {
-                for (int i = 0; i < 3 + COLOR_CODES.size(); i++) {
-                    sheet.autoSizeColumn(i);
-                }
-            }
-            
             // Save workbook
             FileOutputStream fos = new FileOutputStream(outputFilePath);
             workbook.write(fos);
@@ -122,11 +112,159 @@ public class InventoryExcelGenerator {
     }
     
     /**
-     * Create header row with formatting
+     * Create header row with formatting and informational section
      */
     private static void createHeaderRow(Workbook workbook, Sheet sheet) {
-        Row headerRow = sheet.createRow(0);
+        CellStyle infoStyle = createInfoStyle(workbook);
+        CellStyle infoTitleStyle = createInfoTitleStyle(workbook);
         CellStyle headerStyle = createHeaderStyle(workbook);
+        
+        int currentRow = 0;
+        
+        // Title row - span across info columns (A-F)
+        Row titleRow = sheet.createRow(currentRow++);
+        Cell titleCell = titleRow.createCell(0);
+        titleCell.setCellValue("INVENTORY REPORT - SKU BREAKDOWN & COLOR CODING");
+        titleCell.setCellStyle(infoTitleStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, 5));
+        
+        // Empty row
+        currentRow++;
+        
+        // SKU Format Explanation
+        Row formatTitleRow = sheet.createRow(currentRow++);
+        Cell formatTitleCell = formatTitleRow.createCell(0);
+        formatTitleCell.setCellValue("SKU FORMAT EXPLANATION:");
+        formatTitleCell.setCellStyle(infoTitleStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        Row exampleRow = sheet.createRow(currentRow++);
+        Cell exampleCell = exampleRow.createCell(0);
+        exampleCell.setCellValue("Example SKU: E4E4-55-M1-1104");
+        exampleCell.setCellStyle(infoStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        Row dim1Row = sheet.createRow(currentRow++);
+        Cell dim1Cell = dim1Row.createCell(0);
+        dim1Cell.setCellValue("  • First Part (E4E4): Dimensions A & B → E4 = 84 inches (1st Dim), E4 = 84 inches (2nd Dim)");
+        dim1Cell.setCellStyle(infoStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        Row dim2Row = sheet.createRow(currentRow++);
+        Cell dim2Cell = dim2Row.createCell(0);
+        dim2Cell.setCellValue("  • Second Part (55): Third Dimension → 5 inches");
+        dim2Cell.setCellStyle(infoStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        Row taperRow = sheet.createRow(currentRow++);
+        Cell taperCell = taperRow.createCell(0);
+        taperCell.setCellValue("  • Third Part (M1): Taper specification");
+        taperCell.setCellStyle(infoStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        Row colorRow = sheet.createRow(currentRow++);
+        Cell colorCell = colorRow.createCell(0);
+        colorCell.setCellValue("  • Fourth Part (1104): Material/Color code");
+        colorCell.setCellStyle(infoStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        // Empty row
+        currentRow++;
+        
+        // Dimension Code Conversion
+        Row conversionTitleRow = sheet.createRow(currentRow++);
+        Cell conversionTitleCell = conversionTitleRow.createCell(0);
+        conversionTitleCell.setCellValue("DIMENSION CODE CONVERSION:");
+        conversionTitleCell.setCellStyle(infoTitleStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        String[] conversions = {
+            "X = 6 (e.g., X6 = 66 inches)",
+            "S = 7 (e.g., S7 = 77 inches)",
+            "E = 8 (e.g., E8 = 88 inches)",
+            "N = 9 (e.g., N9 = 99 inches)"
+        };
+        
+        for (String conversion : conversions) {
+            Row convRow = sheet.createRow(currentRow++);
+            Cell convCell = convRow.createCell(0);
+            convCell.setCellValue("  • " + conversion);
+            convCell.setCellStyle(infoStyle);
+            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        }
+        
+        // Empty row
+        currentRow++;
+        
+        // Status Indicators with color examples
+        Row statusTitleRow = sheet.createRow(currentRow++);
+        Cell statusTitleCell = statusTitleRow.createCell(0);
+        statusTitleCell.setCellValue("STATUS INDICATORS:");
+        statusTitleCell.setCellStyle(infoTitleStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        // Instock example
+        Row instockRow = sheet.createRow(currentRow++);
+        Cell instockLabelCell = instockRow.createCell(0);
+        instockLabelCell.setCellValue("  • 'instock' = Item currently available in warehouse");
+        instockLabelCell.setCellStyle(infoStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 4));
+        Cell instockExampleCell = instockRow.createCell(5);
+        instockExampleCell.setCellValue("INSTOCK");
+        instockExampleCell.setCellStyle(createInstockStyle(workbook));
+        
+        // Inbound example
+        Row inboundRow = sheet.createRow(currentRow++);
+        Cell inboundLabelCell = inboundRow.createCell(0);
+        inboundLabelCell.setCellValue("  • 'inbound' = Item on the way, arriving soon");
+        inboundLabelCell.setCellStyle(infoStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 4));
+        Cell inboundExampleCell = inboundRow.createCell(5);
+        inboundExampleCell.setCellValue("INBOUND");
+        inboundExampleCell.setCellStyle(createInboundStyle(workbook));
+        
+        // Custom example
+        Row customRow = sheet.createRow(currentRow++);
+        Cell customLabelCell = customRow.createCell(0);
+        customLabelCell.setCellValue("  • 'custom' = Not available, requires custom order");
+        customLabelCell.setCellStyle(infoStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 4));
+        Cell customExampleCell = customRow.createCell(5);
+        customExampleCell.setCellValue("CUSTOM");
+        customExampleCell.setCellStyle(createCustomStyle(workbook));
+        
+        // Empty row
+        currentRow++;
+        
+        // Color Codes
+        Row colorCodesTitleRow = sheet.createRow(currentRow++);
+        Cell colorCodesTitleCell = colorCodesTitleRow.createCell(0);
+        colorCodesTitleCell.setCellValue("COLOR CODES:");
+        colorCodesTitleCell.setCellStyle(infoTitleStyle);
+        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        
+        Map<String, String> colorCodes = new LinkedHashMap<>();
+        colorCodes.put("1104", "Oxford Grey");
+        colorCodes.put("1244", "Brazilian Mahogany");
+        colorCodes.put("1239", "Coffee Brown");
+        colorCodes.put("3132", "Coastal Grey");
+        colorCodes.put("3221", "Mahogany");
+        colorCodes.put("3218", "Mayan Brown");
+        
+        for (Map.Entry<String, String> entry : colorCodes.entrySet()) {
+            Row ccRow = sheet.createRow(currentRow++);
+            Cell ccCell = ccRow.createCell(0);
+            ccCell.setCellValue("  • " + entry.getKey() + " = " + entry.getValue());
+            ccCell.setCellStyle(infoStyle);
+            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(currentRow - 1, currentRow - 1, 0, 5));
+        }
+        
+        // Empty rows before data table
+        currentRow++;
+        currentRow++;
+        
+        // Data table header row - now all columns can be narrow
+        Row headerRow = sheet.createRow(currentRow);
         
         // Dimension headers
         Cell dimAHeader = headerRow.createCell(0);
@@ -149,6 +287,49 @@ public class InventoryExcelGenerator {
             header.setCellValue(colorCode + " - " + colorName);
             header.setCellStyle(headerStyle);
         }
+        
+        // Set column widths - optimized for full screen view
+        // Dimension columns (A, B, C) - moderate width
+        sheet.setColumnWidth(0, 15 * 256);  // DimA
+        sheet.setColumnWidth(1, 15 * 256);  // DimB
+        sheet.setColumnWidth(2, 15 * 256);  // DimC
+        
+        // Color columns (D-I) - wider to show full color names and fill screen
+        for (int i = 3; i < 9; i++) {
+            sheet.setColumnWidth(i, 30 * 256); // 30 character width for color columns
+        }
+    }
+    
+    /**
+     * Create style for informational text
+     */
+    private static CellStyle createInfoStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setFontHeightInPoints((short) 10);
+        font.setFontName("Arial");
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.LEFT);
+        style.setVerticalAlignment(VerticalAlignment.TOP);
+        style.setWrapText(true);
+        return style;
+    }
+    
+    /**
+     * Create style for informational section titles
+     */
+    private static CellStyle createInfoTitleStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
+        font.setFontName("Arial");
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.LEFT);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return style;
     }
     
     /**
@@ -159,6 +340,7 @@ public class InventoryExcelGenerator {
         Font font = workbook.createFont();
         font.setBold(true);
         font.setFontHeightInPoints((short) 11);
+        font.setFontName("Arial");
         style.setFont(font);
         
         style.setAlignment(HorizontalAlignment.CENTER);
@@ -182,6 +364,7 @@ public class InventoryExcelGenerator {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setFontHeightInPoints((short) 10);
+        font.setFontName("Arial");
         style.setFont(font);
         
         style.setAlignment(HorizontalAlignment.CENTER);
@@ -203,6 +386,7 @@ public class InventoryExcelGenerator {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setFontHeightInPoints((short) 10);
+        font.setFontName("Arial");
         font.setColor(IndexedColors.BLACK.getIndex());
         style.setFont(font);
         
@@ -229,6 +413,7 @@ public class InventoryExcelGenerator {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setFontHeightInPoints((short) 10);
+        font.setFontName("Arial");
         font.setColor(IndexedColors.BLACK.getIndex());
         style.setFont(font);
         
@@ -255,6 +440,7 @@ public class InventoryExcelGenerator {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setFontHeightInPoints((short) 10);
+        font.setFontName("Arial");
         font.setColor(IndexedColors.BLACK.getIndex());
         font.setItalic(true);
         style.setFont(font);

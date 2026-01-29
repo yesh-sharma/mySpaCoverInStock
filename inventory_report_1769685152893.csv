@@ -1,3 +1,35 @@
+=== INVENTORY REPORT - SKU BREAKDOWN & COLOR CODING ===
+
+SKU FORMAT EXPLANATION:
+Example SKU: E4E4-55-M1-1104
+  - First Part (E4E4): Dimensions A & B
+    * E4 = 84 inches (First Dimension)
+    * E4 = 84 inches (Second Dimension)
+  - Second Part (55): Third Dimension (5 inches)
+  - Third Part (M1): Taper specification
+  - Fourth Part (1104): Material/Color code
+
+DIMENSION CODE CONVERSION:
+  X = 6 (e.g., X6 = 66 inches)
+  S = 7 (e.g., S7 = 77 inches)
+  E = 8 (e.g., E8 = 88 inches)
+  N = 9 (e.g., N9 = 99 inches)
+
+STATUS INDICATORS (shown in Excel with colors):
+  - 'instock' = Item currently available in warehouse (GREEN in Excel)
+  - 'inbound' = Item on the way, arriving soon (YELLOW in Excel)
+  - 'custom' = Not available, requires custom order (RED in Excel)
+
+COLOR CODES:
+  1104 = Oxford Grey
+  1244 = Brazilian Mahogany
+  1239 = Coffee Brown
+  3132 = Coastal Grey
+  3221 = Mahogany
+  3218 = Mayan Brown
+
+================================================================================
+
 DimA,DimB,DimC,1104 - Oxford Grey,1244 - Brazilian Mahogany,1239 - Coffee Brown,3132 - Coastal Grey,3221 - Mahogany,3218 - Mayan Brown
 84,84,7,inbound 8484-75-M1-1104,inbound 8484-75-M1-1244,inbound 8484-75-M1-1239,inbound 8484-75-M1-3132,instock 8484-75-M1-3221,inbound 8484-75-M1-3218
 80,82,7,instock 8282-85-M1-1104,instock 8282-85-M1-1244,custom,instock 8282-75-M1-3132,custom,instock 8282-85-M1-3218
@@ -49,3 +81,4 @@ DimA,DimB,DimC,1104 - Oxford Grey,1244 - Brazilian Mahogany,1239 - Coffee Brown,
 84,84,10,instock 8484-115-M1-1104,instock 8484-117-M1-1244,instock 8484-115-M1-1239,instock 8686-115-M1-3132,instock 8484-115-M1-3221,instock 8484-117-M1-3218
 92,92,6,instock 9292-55-M1-1104,custom,instock 9292-55-M1-1239,instock 9292-55-M1-3132,instock 9292-55-M1-3221,custom
 88,88,6,instock 8888-55-M1-1104,instock 8888-55-M1-1244,inbound 8888-55-M1-1239,instock 8888-55-M1-3132,instock 8888-55-M1-3221,instock 8888-55-M1-3218
+78,84,0,custom,custom,custom,custom,custom,custom
