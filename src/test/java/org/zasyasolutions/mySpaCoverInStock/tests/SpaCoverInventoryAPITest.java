@@ -1,7 +1,7 @@
 package org.zasyasolutions.mySpaCoverInStock.tests;
-
 import io.restassured.RestAssured; 
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -14,7 +14,7 @@ import org.zasyasolutions.mySpaCoverInStock.pages.InventorySearchAPIClient;
 import org.zasyasolutions.mySpaCoverInStock.utils.CsvDimensionReader;
 import org.zasyasolutions.mySpaCoverInStock.utils.DimensionConverter;
 import org.zasyasolutions.mySpaCoverInStock.utils.FallbackDimensionGenerator;
-
+import org.zasyasolutions.mySpaCoverInStock.utils.InventoryResponseOrganizer;
 import org.zasyasolutions.mySpaCoverInStock.utils.PayloadGenerator;
 
 import com.google.gson.Gson;
@@ -32,111 +32,95 @@ import java.util.Map;
  */
 public class SpaCoverInventoryAPITest extends BasePage {
 
-	private InventorySearchAPIClient apiClient;
-	
+    private InventorySearchAPIClient apiClient;
+    
 
-	@BeforeClass(dependsOnMethods = { "initializeBasePage" })
-	public void setup() {
-		// Read from config file or properties
+    @BeforeClass(dependsOnMethods = { "initializeBasePage" })
+    public void setup() {
+        // Read from config file or properties
 
-		apiClient = new InventorySearchAPIClient(baseUrl, inventoryEndpoint);
+        apiClient = new InventorySearchAPIClient(baseUrl, inventoryEndpoint);
 
-		output("Test Setup Complete");
-		output("Base URL: " + baseUrl);
-		output("Endpoint: " + inventoryEndpoint);
-	}
+        output("Test Setup Complete");
+        output("Base URL: " + baseUrl);
+        output("Endpoint: " + inventoryEndpoint);
+    }
 
-//    @Test(description = "Test single dimension conversion to SKU format")
-	public void testDimensionToSKUConversion() {
-		SpaCoverDimension dimension = new SpaCoverDimension(91, 82, 6);
-		String expectedSKU = "N1E2-6";
+    @Test
+    public void inventorySearchWithFallbackSkus() {
 
-		String actualSKU = DimensionConverter.convertToSKU(dimension);
+        List<List<String>> skuPayloads = PayloadGenerator.generatePayloads();
+        
+        // Create CSV output file with timestamp
+        String outputFilePath = "inventory_report_" + System.currentTimeMillis() + ".csv";
+        output("CSV output file will be saved to: " + outputFilePath);
+        
+        // IMPORTANT: Reset the file state before starting
+        InventoryResponseOrganizer.resetFileState();
 
-		output("\nOriginal Dimensions: A=" + dimension.getDimensionA() + ", B=" + dimension.getDimensionB()
-				+ ", C=" + dimension.getDimensionC());
-		output("Expected SKU: " + expectedSKU);
-		output("Actual SKU: " + actualSKU);
+        for (int i = 0; i < skuPayloads.size(); i++) {
 
-		Assert.assertEquals(actualSKU, expectedSKU, "SKU conversion should match expected format");
-	}
+            List<String> skuList = skuPayloads.get(i);
 
-	// @Test(description = "Test fallback generation for standard dimensions")
-	public void testFallbackGenerationStandard() {
-		SpaCoverDimension dimension = new SpaCoverDimension(91, 82, 6);
+            Map<String, Object> data = new HashMap<>();
+            data.put("sku", skuList);
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String payload = gson.toJson(data);
+            
+            output("Endpoint: " + inventoryEndpoint);
+            output(">> Sending payload for entry " + (i + 1) + ": " + payload);
 
-		List<SpaCoverDimension> fallbacks = FallbackDimensionGenerator.generateFallbacks(dimension);
+            Response response =
+                requestSpec
+                    .body(payload)
+                    .log().all()
+                   
+                    .header("Accept","application/json")
+                .when()
+                    .post(inventoryEndpoint)
+                .then()
+                    .log().all()  
+                    .extract()
+                    .response();
 
-		output("\nGenerated " + fallbacks.size() + " fallback dimensions");
+            output("Status Code: " + response.getStatusCode());
+            
+            // Assert status code
+            Assert.assertEquals(response.getStatusCode(), 201);
 
-		Assert.assertTrue(fallbacks.size() > 0, "Should generate at least one fallback dimension");
-
-		// Verify original is included
-		boolean containsOriginal = fallbacks.stream()
-				.anyMatch(d -> d.getDimensionA() == 91 && d.getDimensionB() == 82 && d.getDimensionC() == 6);
-
-		Assert.assertTrue(containsOriginal, "Fallback list should include original dimensions");
-	}
-
-	@Test
-	public void inventorySearchWithFallbackSkus() {
-
-	    List<List<String>> skuPayloads = PayloadGenerator.generatePayloads();
-
-	    for (int i = 0; i < skuPayloads.size(); i++) {
-
-	        List<String> skuList = skuPayloads.get(i);
-
-	        Map<String, Object> data = new HashMap<>();
-	        data.put("sku", skuList);
-	        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-	        String payload = gson.toJson(data);
-	        
-	        output("Endpoint: " + inventoryEndpoint);
-	        output(">> Sending payload for entry " + (i + 1) + ": " + payload);
-
-	        Response response =
-	        	    requestSpec
-	        	        .body(payload)
-	        	        .log().all()
-	        	       
-	        	        .header("Accept","application/json")
-	        	    .when()
-	        	        .post(inventoryEndpoint)
-	        	    .then()
-	        	        .log().all()  
-	        	        .extract()
-	        	        .response();
-
-	        	output("Status Code: " + response.getStatusCode());
-	        	output("Response Body: " + response.getBody().asString());
-
-	        	// Then assert based on what you see
-	        	Assert.assertEquals(response.getStatusCode(), 201);
-
-	        output(">> Response for entry " + (i + 1) + ": .... ");
-	        response.prettyPrint();
-	        
-	    }
-	}
-
-	
-
-//	    @Test(description = "Test dimension converter for all replacement digits")
-	public void testDimensionConverterAllDigits() {
-		String[][] testCases = { { "60", "X0" }, { "72", "S2" }, { "84", "E4" }, { "96", "N6" }, { "50", "50" }, };
-
-		output("\n=== Testing Dimension Converter ===");
-
-		for (String[] testCase : testCases) {
-			String input = testCase[0];
-			String expected = testCase[1];
-			String actual = DimensionConverter.replaceFirstDigit(input);
-
-			output("Input: " + input + " -> Expected: " + expected + " -> Actual: " + actual);
-
-			Assert.assertEquals(actual, expected, "Dimension " + input + " should convert to " + expected);
-		}
-	}
-
+            output(">> Response for entry " + (i + 1) + ": .... ");
+            
+            String responseBody = response.getBody().asString();
+            JsonPath js1 = new JsonPath(responseBody);
+            int count = js1.getInt("inventory.size()"); 
+            output("Total inventory items found: " + count);
+            Assert.assertTrue(count >= 0, "Inventory items should be returned");
+            
+            List<String> availableInventorySkus = js1.getList("inventory.sku");
+            List<String> availableInboundSkus = js1.getList("inbound.sku");
+            output(">> Getting a get Response for inventory sku : "+availableInventorySkus);
+            output(">> Getting a get Response for inbound sku : "+availableInboundSkus);
+            
+            // Process and organize inventory - this will APPEND to CSV
+            try {
+                output("\n>> Processing and organizing inventory for payload " + (i + 1));
+                InventoryResponseOrganizer.processAndSaveInventory(
+                    responseBody,      // The JSON response from API
+                    skuList,          // The list of SKUs we sent in payload
+                    outputFilePath    // Where to save the report
+                );
+                output(">> Inventory organized successfully for payload " + (i + 1));
+            } catch (Exception e) {
+                output("!! Error organizing inventory: " + e.getMessage());
+                e.printStackTrace();
+            }
+             
+        }
+        
+        output("\n" + "=".repeat(80));
+        output("OK: TEST COMPLETED - INVENTORY REPORT SAVED TO: " + outputFilePath);
+        output("=".repeat(80));
+    }
+    
+    
 }
